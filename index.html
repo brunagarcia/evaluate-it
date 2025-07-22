@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Prompt Evaluation Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            color: #331832;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #331832 0%, #442341 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(51, 24, 50, 0.15);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+
+        .file-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #customFileButton {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            background: #1B5299;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-weight: 500;
+        }
+
+        #customFileButton:hover {
+            background: #2461a8;
+            transform: translateY(-2px);
+        }
+
+        .download-btn {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .download-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .evaluation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            min-height: 70vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(51, 24, 50, 0.1);
+            border: 1px solid rgba(51, 24, 50, 0.05);
+        }
+
+        .card h2 {
+            color: #331832;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .id-badge {
+            background: #1B5299;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .query-content {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #331832;
+        }
+
+        .response-content {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            line-height: 1.7;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #331832;
+        }
+
+        .response-content h1,
+        .response-content h2,
+        .response-content h3 {
+            color: #331832;
+            margin-bottom: 0.5rem;
+        }
+
+        .response-content code {
+            background: #e9ecef;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .controls-section {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(51, 24, 50, 0.1);
+            border: 1px solid rgba(51, 24, 50, 0.05);
+        }
+
+        .evaluation-controls {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .pass-fail-section h3 {
+            color: #331832;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover {
+            border-color: #1B5299;
+            background: rgba(27, 82, 153, 0.05);
+        }
+
+        .radio-option.pass {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+        .radio-option.fail {
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.05);
+        }
+
+        .radio-option input[type="radio"] {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: #1B5299;
+        }
+
+        .radio-option label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #331832;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-section h3 {
+            color: #331832;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            color: #331832;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: #1B5299;
+            box-shadow: 0 0 0 3px rgba(27, 82, 153, 0.1);
+        }
+
+        .tags-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            transition: border-color 0.3s ease;
+            color: #331832;
+        }
+
+        .tags-input:focus {
+            outline: none;
+            border-color: #1B5299;
+            box-shadow: 0 0 0 3px rgba(27, 82, 153, 0.1);
+        }
+
+        .save-next-btn {
+            background: linear-gradient(135deg, #331832 0%, #442341 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .save-next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(51, 24, 50, 0.3);
+        }
+
+        .save-next-btn:active {
+            transform: translateY(0);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .completion-message {
+            text-align: center;
+            padding: 3rem;
+            color: #331832;
+        }
+
+        .completion-message h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #28a745;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #331832;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #442341;
+        }
+
+        @media (max-width: 768px) {
+            .evaluation-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .evaluation-controls {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+    <!-- Marked for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Prompt Evaluation Tool</h1>
+        <div class="file-controls">
+            <input type="file" id="csvFileInput" style="display: none;" />
+            <button id="customFileButton">📁 Upload CSV</button>
+            <span id="fileName"></span>
+            <button class="download-btn" onclick="downloadCSV()">💾 Download Annotated CSV</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div id="reviewSection" class="hidden">
+            <div class="evaluation-grid">
+                <div class="card">
+                    <h2>Prompt <span class="id-badge" id="currentId"></span></h2>
+                    <div class="query-content" id="currentQuery"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Response</h2>
+                    <div class="response-content" id="currentResponse"></div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="evaluation-controls">
+                    <div class="pass-fail-section">
+                        <h3>Evaluation</h3>
+                        <div class="radio-group">
+                            <div class="radio-option pass">
+                                <input type="radio" name="passFail" value="Pass" id="passOption" />
+                                <label for="passOption">✅ Pass</label>
+                            </div>
+                            <div class="radio-option fail">
+                                <input type="radio" name="passFail" value="Fail" id="failOption" />
+                                <label for="failOption">❌ Fail</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <h3>Notes & Tags</h3>
+                        <textarea class="notes-textarea" id="notesInput"
+                            placeholder="Add your evaluation notes here..."></textarea>
+                        <input type="text" class="tags-input" id="tagsInput" placeholder="Add tags (comma-separated)" />
+                    </div>
+
+                    <div>
+                        <button class="save-next-btn" onclick="saveAndNext()">Save & Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="completionMessage" class="completion-message hidden">
+            <h2>🎉 All Records Reviewed!</h2>
+            <p>Great job! You've completed the evaluation of all prompts.</p>
+        </div>
+    </div>
+
+    <script>
+        let data = [];
+        let currentIndex = 0;
+        let headers = [];
+        let annotated = new Set();
+
+        document.getElementById("customFileButton").addEventListener("click", () => {
+                document.getElementById("csvFileInput").click();
+            });
+
+            document.getElementById("csvFileInput").addEventListener("change", function () {
+                const file = this.files[0];
+                if (!file) return;
+
+                if (file) {
+                    document.getElementById("fileName").textContent = file.name;
+                }
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    data = results.data;
+
+                    // Ensure annotation columns exist
+                    data.forEach(row => {
+                        row["Evaluation_PassFail"] = row["Evaluation_PassFail"] || '';
+                        row["Evaluation_Notes"] = row["Evaluation_Notes"] || '';
+                        row["Evaluation_Tags"] = row["Evaluation_Tags"] || '';
+                    });
+
+                    // Define headers including new annotation columns
+                    const existingHeaders = Object.keys(data[0] || {});
+                    const newHeaders = ["Evaluation_PassFail", "Evaluation_Notes", "Evaluation_Tags"];
+
+                    // Only add headers that don't already exist
+                    const missingHeaders = newHeaders.filter(header => !existingHeaders.includes(header));
+                    headers = existingHeaders.concat(missingHeaders);
+
+                    currentIndex = 0;
+                    showNextUnreviewed();
+                }
+            });
+        });
+
+        function showNextUnreviewed() {
+            while (currentIndex < data.length &&
+                data[currentIndex]["Evaluation_PassFail"]) {
+                currentIndex++;
+            }
+
+            if (currentIndex >= data.length) {
+                document.getElementById("reviewSection").classList.add("hidden");
+                document.getElementById("completionMessage").classList.remove("hidden");
+                return;
+            }
+
+            const row = data[currentIndex];
+            document.getElementById("currentId").textContent = `ID: ${row.id}`;
+            document.getElementById("currentQuery").textContent = row.query;
+            document.getElementById("currentResponse").innerHTML = marked.parse(row.response || '');
+            document.querySelectorAll('input[name="passFail"]').forEach(el => el.checked = false);
+            document.getElementById("notesInput").value = '';
+            document.getElementById("tagsInput").value = '';
+            document.getElementById("reviewSection").classList.remove("hidden");
+            document.getElementById("completionMessage").classList.add("hidden");
+        }
+
+        function saveAndNext() {
+            const decision = document.querySelector('input[name="passFail"]:checked');
+            const notes = document.getElementById("notesInput").value.trim();
+            const tags = document.getElementById("tagsInput").value.trim();
+
+            if (!decision) {
+                alert("Please mark Pass or Fail.");
+                return;
+            }
+
+            const row = data[currentIndex];
+            row["Evaluation_PassFail"] = decision.value;
+            row["Evaluation_Notes"] = notes;
+            row["Evaluation_Tags"] = tags;
+
+            currentIndex++;
+            showNextUnreviewed();
+        }
+
+        function downloadCSV() {
+            if (data.length === 0) return;
+
+            const csvRows = [headers.join(',')];
+            data.forEach(row => {
+                const values = headers.map(h => `"${(row[h] || '').replace(/"/g, '""')}"`);
+                csvRows.push(values.join(','));
+            });
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'annotated_prompts.csv';
+            document.body.appendChild(a);
+            a.click();
+                document.body.removeChild(a);
+            }
+
+            // Add visual feedback for radio button selection
+            document.addEventListener('change', function (e) {
+            if (e.target.name === 'passFail') {
+                document.querySelectorAll('.radio-option').forEach(option => {
+                    option.classList.remove('pass', 'fail');
+                });
+
+                if (e.target.value === 'Pass') {
+                    e.target.closest('.radio-option').classList.add('pass');
+                } else if (e.target.value === 'Fail') {
+                    e.target.closest('.radio-option').classList.add('fail');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
